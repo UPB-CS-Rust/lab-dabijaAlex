@@ -19,15 +19,15 @@
 //  - add a method "peek" so that "queue.peek()" returns the same thing as "queue.read()", but leaves the element in the queue
 
 struct RingBuffer {
-    data: [u8; 16],
+    data: Box<[u8]>,
     start: usize,
     end: usize,
 }
 
 impl RingBuffer {
-    fn new() -> RingBuffer {
+    fn new(size: usize) -> RingBuffer {
         RingBuffer {
-            data: [0; 16],
+            data: make_box(size),
             start: 0,
             end: 0,
         }
@@ -37,11 +37,40 @@ impl RingBuffer {
     /// it returns None if the queue was empty
 
     fn read(&mut self) -> Option<u8> {
-        todo!()
+        // todo!()
+        if self.start == self.end {
+            return None
+        } else {
+            let val = self.data[self.start];
+            self.start = (self.start + 1) % self.data.len();
+            Some(val)
+        }
+    }
+
+
+    fn peek(&mut self) -> Option<u8> {
+        // todo!()
+        if self.start == self.end {
+            return None
+        } else {
+            let val = self.data[self.start];
+            Some(val)
+        }
     }
 
     /// This function tries to put `value` on the queue; and returns true if this succeeds
     /// It returns false if writing to the queue failed (which can happen if there is not enough room)
+
+    fn has_room(& self) -> bool {
+        let pos = (self.end + 1) % self.data.len();
+        if pos == self.start {
+            // the buffer can hold no more new data
+            false 
+        } else {
+            true
+        }
+    }
+
 
     fn write(&mut self, value: u8) -> bool {
         self.data[self.end] = value;
@@ -74,14 +103,20 @@ impl Iterator for RingBuffer {
     }
 }
 
-fn main() {
-    let mut queue = RingBuffer::new();
+fn main() -> Option<()>{
+    let mut queue = RingBuffer::new(7);
     assert!(queue.write(1));
     assert!(queue.write(2));
     assert!(queue.write(3));
     assert!(queue.write(4));
     assert!(queue.write(5));
+    let x = queue.peek().unwrap();
+    // let x = queue.peek()
+    let case = queue.has_room();
+    println!("{case}");
+    println!("{x}");
     for elem in queue {
         println!("{elem}");
     }
+    return None;
 }
